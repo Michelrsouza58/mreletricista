@@ -1,0 +1,172 @@
+/* src/components/auth/AuthModals.css */
+
+/* Overlay de fundo semitransparente que sobrepõe a tela */
+.modal-backdrop {
+  position: fixed;
+  top: 90px; /* Começa abaixo do Header fixo de 90px */
+  bottom: 50px; /* Termina acima do Footer */
+  left: 0;
+  right: 0;
+  background: rgba(5, 15, 28, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 90; /* Fica abaixo do Header (100) para o MR ELETRICISTA não sumir */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-card {
+  position: relative;
+  background: #0c2340;
+  border: 2px solid #f2c94c;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  padding: 32px 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+}
+
+.register-card {
+  max-width: 500px;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #f2c94c;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modal-title {
+  font-size: 1.8rem;
+  color: #f2c94c;
+  margin-bottom: 6px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.modal-subtitle {
+  font-size: 0.9rem;
+  color: #d1d5db;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f2c94c;
+}
+
+.form-group input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(242, 201, 76, 0.4);
+  border-radius: 8px;
+  padding: 12px;
+  color: #ffffff;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #f2c94c;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.form-links {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.link-btn {
+  background: transparent;
+  border: none;
+  color: #d1d5db;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-btn.highlight {
+  color: #f2c94c;
+  font-weight: bold;
+}
+
+.auth-submit-btn {
+  background: #f2c94c;
+  color: #0c2340;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  text-transform: uppercase;
+}
+
+.auth-submit-btn:hover {
+  background: #ffe066;
+  transform: translateY(-2px);
+}
+
+.auth-cancel-btn {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+}
+
+.auth-cancel-btn:hover {
+  border-color: #f2c94c;
+  color: #f2c94c;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modal-actions .auth-submit-btn {
+  flex: 1;
+}
+
+.form-footer-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  color: #d1d5db;
+}
+
+@media (max-width: 600px) {
+  .modal-backdrop {
+    top: 75px;
+  }
+}

@@ -1,0 +1,173 @@
+/* src/components/features/RequestServiceStepTwoModal.css */
+
+.modal-backdrop-schedule {
+  position: fixed;
+  top: 90px; /* Mantém o topo visível (MR ELETRICISTA) */
+  bottom: 50px; /* Mantém o rodapé visível */
+  left: 0;
+  right: 0;
+  background: rgba(5, 15, 28, 0.82);
+  backdrop-filter: blur(8px);
+  z-index: 96;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-card-schedule {
+  position: relative;
+  background: #0c2340;
+  border: 2px solid #f2c94c;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+}
+
+.modal-title-schedule {
+  font-size: 1.8rem;
+  color: #f2c94c;
+  text-align: center;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.modal-subtitle-schedule {
+  font-size: 0.88rem;
+  color: #d1d5db;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.section-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f2c94c;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+/* CARDS DOS DIAS (CHIPS) */
+.date-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.date-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 12px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.date-chip:hover {
+  border-color: #f2c94c;
+  background: rgba(242, 201, 76, 0.1);
+}
+
+.date-chip.selected {
+  background: #f2c94c;
+  color: #0c2340;
+  border-color: #f2c94c;
+  font-weight: bold;
+}
+
+.chip-text {
+  font-size: 0.82rem;
+}
+
+/* CARDS DE PERÍODO (MANHÃ / TARDE / NOITE) */
+.time-slots-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.time-slot-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-slot-card:hover {
+  border-color: #f2c94c;
+  background: rgba(242, 201, 76, 0.08);
+}
+
+.time-slot-card.selected {
+  border: 2px solid #f2c94c;
+  background: rgba(242, 201, 76, 0.18);
+}
+
+.slot-icon {
+  font-size: 1.5rem;
+}
+
+.slot-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.slot-info strong {
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.slot-info span {
+  font-size: 0.8rem;
+  color: #d1d5db;
+}
+
+/* BOTÕES DE NAVEGAÇÃO */
+.modal-actions-schedule {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-back {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-submit-schedule {
+  flex: 1;
+  background: #f2c94c;
+  color: #0c2340;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.2s;
+}
+
+.btn-submit-schedule:disabled {
+  background: #4b5563;
+  color: #9ca3af;
+  cursor: not-allowed;
+}

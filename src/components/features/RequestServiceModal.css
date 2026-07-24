@@ -1,0 +1,239 @@
+/* src/components/features/RequestServiceModal.css */
+
+.modal-backdrop-service {
+  position: fixed;
+  top: 90px;
+  bottom: 50px;
+  left: 0;
+  right: 0;
+  background: rgba(5, 15, 28, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto; /* Permite rolagem da tela se o modal for alto */
+}
+
+.modal-card-service {
+  position: relative;
+  background: #0c2340;
+  border: 2px solid #f2c94c;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 600px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  max-height: 80vh; /* Altura máxima com barra de rolagem interna */
+  overflow-y: auto;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #f2c94c;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modal-title-service {
+  font-size: 1.8rem;
+  color: #f2c94c;
+  text-align: center;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.modal-subtitle-service {
+  font-size: 0.88rem;
+  color: #d1d5db;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.step-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Espaçamento claro entre todos os 6 campos */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.section-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f2c94c;
+}
+
+.form-group input[type="text"], 
+.form-group select, 
+.form-group textarea {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(242, 201, 76, 0.4);
+  border-radius: 8px;
+  padding: 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  width: 100%;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  border-color: #f2c94c;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.form-group select option {
+  background: #0c2340;
+  color: #fff;
+}
+
+/* GRUPO DE IMÓVEL */
+.radio-group-imovel {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-option {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(242, 201, 76, 0.3);
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-option.selected {
+  background: #f2c94c;
+  color: #0c2340;
+  border-color: #f2c94c;
+}
+
+/* CARDS DE SERVIÇO */
+.services-grid-select {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.service-card-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.service-card-option.selected {
+  border: 2px solid #f2c94c;
+  background: rgba(242, 201, 76, 0.2);
+}
+
+/* DATA E HORA */
+.date-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  gap: 8px;
+}
+
+.date-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 12px 4px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.date-chip.selected {
+  background: #f2c94c;
+  color: #0c2340;
+  font-weight: bold;
+}
+
+.time-slots-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.time-slot-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.time-slot-card.selected {
+  border: 2px solid #f2c94c;
+  background: rgba(242, 201, 76, 0.18);
+}
+
+.slot-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+/* BOTÕES DE AÇÃO */
+.btn-submit-service {
+  width: 100%;
+  background: #f2c94c;
+  color: #0c2340;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+.btn-submit-service:disabled {
+  background: #4b5563;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.modal-actions-service {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-back {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .services-grid-select {
+    grid-template-columns: 1fr;
+  }
+}
