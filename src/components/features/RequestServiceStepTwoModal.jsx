@@ -1,18 +1,21 @@
 // src/components/features/RequestServiceStepTwoModal.jsx
 import React, { useState } from 'react';
 import './RequestServiceStepTwoModal.css';
+import { db } from '../../services/firebase';
+import { ref, push, set } from 'firebase/database';
 
 export default function RequestServiceStepTwoModal({ 
   isOpen, 
   onClose, 
   onBack, 
   onSubmitSuccess, 
-  dadosEtapaAnterior = {} 
+  dadosEtapaAnterior = {},
+  userEmail
 }) {
   const [dataSelecionada, setDataSelecionada] = useState('');
   const [periodoSelecionado, setPeriodoSelecionado] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Gerador dinâmico dos próximos 5 dias para os cards interativos
   const gerarProximosDias = () => {
     const dias = [];
     const hoje = new Date();
@@ -31,24 +34,41 @@ export default function RequestServiceStepTwoModal({
 
   const diasDisponiveis = gerarProximosDias();
 
-  const handleFinalize = (e) => {
+  const handleFinalize = async (e) => {
     e.preventDefault();
     if (!dataSelecionada || !periodoSelecionado) {
       alert('Por favor, selecione o dia e o período do atendimento.');
       return;
     }
 
-    // Une os dados da primeira etapa com a data e hora selecionadas
-    const agendamentoCompleto = {
-      ...dadosEtapaAnterior,
-      dataAgendamento: dataSelecionada,
-      periodo: periodoSelecionado,
-      dataFinalizacao: new Date()
-    };
+    try {
+      setLoading(true);
 
-    alert('Serviço agendado com sucesso! Entraremos em contato para confirmar a visita.');
-    if (onSubmitSuccess) onSubmitSuccess(agendamentoCompleto);
-    onClose();
+      const emailRaw = userEmail || dadosEtapaAnterior.email || '';
+      const emailTratado = emailRaw ? String(emailRaw).trim().toLowerCase() : '';
+
+      const agendamentoCompleto = {
+        ...dadosEtapaAnterior,
+        email: emailTratado,
+        dataAgendamento: dataSelecionada,
+        periodo: periodoSelecionado,
+        status: 'Pendente',
+        criadoEm: new Date().toISOString()
+      };
+
+      const servicosRef = ref(db, 'servicos_agendados');
+      const novoServicoRef = push(servicosRef);
+      await set(novoServicoRef, agendamentoCompleto);
+
+      alert(`Serviço agendado com sucesso! Código: ${novoServicoRef.key}`);
+      if (onSubmitSuccess) onSubmitSuccess({ id: novoServicoRef.key, ...agendamentoCompleto });
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar no Realtime Database:', error);
+      alert('Erro ao agendar serviço. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -62,7 +82,6 @@ export default function RequestServiceStepTwoModal({
         <p className="modal-subtitle-schedule">Escolha o melhor momento para o atendimento presencial</p>
 
         <form onSubmit={handleFinalize} className="schedule-form">
-          {/* SELEÇÃO DO DIA DA SEMANA */}
           <div className="step-section">
             <label className="section-label">📅 1. Selecione o Dia</label>
             <div className="date-chips-grid">
@@ -78,7 +97,6 @@ export default function RequestServiceStepTwoModal({
             </div>
           </div>
 
-          {/* SELEÇÃO DO PERÍODO/HORÁRIO */}
           <div className="step-section">
             <label className="section-label">⏰ 2. Selecione o Período</label>
             <div className="time-slots-grid">
@@ -102,19 +120,18 @@ export default function RequestServiceStepTwoModal({
             </div>
           </div>
 
-          {/* BOTÕES DE AÇÃO */}
           <div className="modal-actions-schedule">
             {onBack && (
-              <button type="button" className="btn-back" onClick={onBack}>
+              <button type="button" className="btn-back" onClick={onBack} disabled={loading}>
                 ⬅ Voltar
               </button>
             )}
             <button 
               type="submit" 
               className="btn-submit-schedule"
-              disabled={!dataSelecionada || !periodoSelecionado}
+              disabled={!dataSelecionada || !periodoSelecionado || loading}
             >
-              Confirmar e Agendar 🚀
+              {loading ? 'Enviando...' : 'Confirmar e Agendar 🚀'}
             </button>
           </div>
         </form>

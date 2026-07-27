@@ -2,31 +2,36 @@
 
 .modal-backdrop-service {
   position: fixed;
-  top: 90px;
-  bottom: 50px;
+  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(5, 15, 28, 0.85);
-  backdrop-filter: blur(8px);
+  /* Fundo da tela mais suave para realçar o fundo da página */
+  background: rgba(5, 15, 28, 0.5);
+  backdrop-filter: blur(4px);
   z-index: 95;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  overflow-y: auto; /* Permite rolagem da tela se o modal for alto */
+  overflow-y: auto;
 }
 
+/* CARD DO FORMULÁRIO TRANSPARENTE / GLASSMORPHISM */
 .modal-card-service {
   position: relative;
-  background: #0c2340;
-  border: 2px solid #f2c94c;
+  /* Fundo semitransparente em vez da cor sólida #0c2340 */
+  background: rgba(12, 35, 64, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(242, 201, 76, 0.6);
   border-radius: 20px;
   width: 100%;
   max-width: 600px;
   padding: 28px 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   color: #ffffff;
-  max-height: 80vh; /* Altura máxima com barra de rolagem interna */
+  max-height: 85vh;
   overflow-y: auto;
 }
 
@@ -59,7 +64,7 @@
 .step-container {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Espaçamento claro entre todos os 6 campos */
+  gap: 20px;
 }
 
 .form-group {
@@ -92,7 +97,7 @@
 .form-group select:focus, 
 .form-group textarea:focus {
   border-color: #f2c94c;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .form-group select option {
@@ -100,7 +105,7 @@
   color: #fff;
 }
 
-/* GRUPO DE IMÓVEL */
+/* GRUPO DE IMÓVEL (BOTÕES TRANSPARENTES) */
 .radio-group-imovel {
   display: flex;
   gap: 10px;
@@ -108,7 +113,7 @@
 
 .btn-option {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(242, 201, 76, 0.3);
   color: #fff;
   padding: 10px;
@@ -116,6 +121,7 @@
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .btn-option.selected {
@@ -124,7 +130,7 @@
   border-color: #f2c94c;
 }
 
-/* CARDS DE SERVIÇO */
+/* CARDS DE SERVIÇO (TRANSPARENTES) */
 .services-grid-select {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -140,14 +146,20 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.service-card-option:hover {
+  background: rgba(242, 201, 76, 0.1);
+  border-color: rgba(242, 201, 76, 0.5);
 }
 
 .service-card-option.selected {
   border: 2px solid #f2c94c;
-  background: rgba(242, 201, 76, 0.2);
+  background: rgba(242, 201, 76, 0.25);
 }
 
-/* DATA E HORA */
+/* DATA E HORA TRANSPARENTES */
 .date-chips-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
@@ -161,6 +173,7 @@
   padding: 12px 4px;
   text-align: center;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .date-chip.selected {
@@ -184,11 +197,12 @@
   align-items: center;
   gap: 14px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .time-slot-card.selected {
   border: 2px solid #f2c94c;
-  background: rgba(242, 201, 76, 0.18);
+  background: rgba(242, 201, 76, 0.22);
 }
 
 .slot-info {
@@ -213,7 +227,7 @@
 }
 
 .btn-submit-service:disabled {
-  background: #4b5563;
+  background: rgba(75, 85, 99, 0.6);
   color: #9ca3af;
   cursor: not-allowed;
 }
@@ -224,7 +238,7 @@
 }
 
 .btn-back {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;

@@ -2,12 +2,12 @@
 
 .modal-backdrop-schedule {
   position: fixed;
-  top: 90px; /* Mantém o topo visível (MR ELETRICISTA) */
-  bottom: 50px; /* Mantém o rodapé visível */
+  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(5, 15, 28, 0.82);
-  backdrop-filter: blur(8px);
+  background: rgba(5, 15, 28, 0.5);
+  backdrop-filter: blur(4px);
   z-index: 96;
   display: flex;
   align-items: center;
@@ -16,15 +16,18 @@
   animation: fadeIn 0.25s ease-out;
 }
 
+/* CARD COM TRANSPARÊNCIA GLASSMORPHISM */
 .modal-card-schedule {
   position: relative;
-  background: #0c2340;
-  border: 2px solid #f2c94c;
+  background: rgba(12, 35, 64, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(242, 201, 76, 0.6);
   border-radius: 20px;
   width: 100%;
   max-width: 520px;
   padding: 28px 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   color: #ffffff;
 }
 
@@ -52,7 +55,7 @@
   text-align: left;
 }
 
-/* CARDS DOS DIAS (CHIPS) */
+/* CARDS DOS DIAS (CHIPS TRANSPARENTES) */
 .date-chips-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
@@ -67,12 +70,12 @@
   padding: 12px 4px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .date-chip:hover {
   border-color: #f2c94c;
-  background: rgba(242, 201, 76, 0.1);
+  background: rgba(242, 201, 76, 0.15);
 }
 
 .date-chip.selected {
@@ -86,7 +89,7 @@
   font-size: 0.82rem;
 }
 
-/* CARDS DE PERÍODO (MANHÃ / TARDE / NOITE) */
+/* CARDS DE PERÍODO TRANSPARENTES */
 .time-slots-grid {
   display: flex;
   flex-direction: column;
@@ -103,17 +106,17 @@
   align-items: center;
   gap: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .time-slot-card:hover {
   border-color: #f2c94c;
-  background: rgba(242, 201, 76, 0.08);
+  background: rgba(242, 201, 76, 0.12);
 }
 
 .time-slot-card.selected {
   border: 2px solid #f2c94c;
-  background: rgba(242, 201, 76, 0.18);
+  background: rgba(242, 201, 76, 0.22);
 }
 
 .slot-icon {
@@ -143,7 +146,7 @@
 }
 
 .btn-back {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.3);
   border-radius: 10px;
@@ -167,7 +170,7 @@
 }
 
 .btn-submit-schedule:disabled {
-  background: #4b5563;
+  background: rgba(75, 85, 99, 0.6);
   color: #9ca3af;
   cursor: not-allowed;
 }

@@ -20,7 +20,7 @@
 }
 
 /* ==========================================
-   FUNDO COM IMAGEM CORRIGIDO (NÃO SUME)
+   FUNDO COM IMAGEM (FIXO AO ROLAR)
    ========================================== */
 .bg-background-image {
   position: fixed;
@@ -32,7 +32,7 @@
   background-position: center;
   background-repeat: no-repeat;
   z-index: -2;
-  filter: brightness(0.6) contrast(1.1);
+  filter: brightness(0.55) contrast(1.1);
 }
 
 .bg-overlay-gradient {
@@ -41,101 +41,171 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, rgba(12, 35, 64, 0.65) 0%, rgba(5, 15, 28, 0.9) 100%);
+  background: radial-gradient(circle at center, rgba(12, 35, 64, 0.65) 0%, rgba(5, 15, 28, 0.92) 100%);
   z-index: -1;
 }
 
 /* ==========================================
-   HEADER FIXO NO TOPO
+   HEADER ÚNICO HORIZONTAL
    ========================================== */
-.navbar-fixed {
-  position: fixed;
+.navbar-scroll-sponsor {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  background: rgba(12, 35, 64, 0.98);
+  backdrop-filter: blur(12px);
+  
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 2px 15px rgba(242, 201, 76, 0.15);
+  border-bottom: 1px solid rgba(242, 201, 76, 0.3);
+  z-index: 10;
+  /* Removido overflow: hidden para permitir que o dropdown flutue para fora */
+}
+
+/* CONTÊINERES DAS IMAGENS LATERAIS */
+.sponsor-box {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden; /* Mantém o corte apenas nas fotos de fundo */
+}
+
+.sponsor-box.left {
+  justify-content: flex-start;
+}
+
+.sponsor-box.right {
+  justify-content: flex-end;
+}
+
+/* IMAGENS NÍTIDAS E BEM VISÍVEIS */
+.sponsor-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.92);
+  transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+.sponsor-img:hover {
+  transform: scale(1.03);
+  filter: brightness(1);
+}
+
+/* MÁSCARAS DE DEGRADÊ LEVES */
+.sponsor-box.left::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(to right, transparent 0%, rgba(12, 35, 64, 0.7) 60%, rgba(12, 35, 64, 1) 100%);
+  pointer-events: none;
+}
+
+.sponsor-box.right::before {
+  content: '';
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 90px;
-  background: rgba(12, 35, 64, 0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 2px solid #f2c94c;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(to left, transparent 0%, rgba(12, 35, 64, 0.7) 60%, rgba(12, 35, 64, 1) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* LOGO CENTRAL ÚNICO */
+.logo-container-large {
+  position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  padding: 0 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
   font-weight: 900;
   letter-spacing: 2px;
   text-transform: uppercase;
+  background: #050f1c;
+  padding: 14px 28px;
+  border-radius: 20px;
+  border: 2px solid #f2c94c;
+  box-shadow: 0 0 35px rgba(242, 201, 76, 0.4);
+  margin: 0 20px;
+  white-space: nowrap;
 }
 
-.brand-mr {
+.brand-mr-large {
   color: #f2c94c;
-  font-size: 2.8rem;
+  font-size: 3.4rem;
   font-style: italic;
-  margin-right: 8px;
-  text-shadow: 0 0 12px rgba(242, 201, 76, 0.4);
+  margin-right: 10px;
+  text-shadow: 0 0 15px rgba(242, 201, 76, 0.6);
 }
 
-.brand-eletricista {
+.brand-eletricista-large {
   color: #ffffff;
-  font-size: 2.4rem;
+  font-size: 2.5rem;
   background: #0c2340;
-  padding: 4px 14px;
-  border-radius: 8px;
+  padding: 6px 18px;
+  border-radius: 10px;
   border: 2px solid #f2c94c;
 }
 
-/* PERFIL NO TOPO DIREITO */
+/* ==========================================
+   PERFIL FLUTUANTE (FIXADO NO TOPO DIREITO)
+   ========================================== */
 .user-profile-wrapper {
   position: absolute;
-  right: 24px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 20px; /* Posiciona no topo da barra */
+  right: 20px; /* Posiciona na direita */
+  z-index: 30; /* Z-index elevado para ficar acima do degradê da foto */
 }
 
 .user-avatar-btn {
   background: #f2c94c;
-  border: none;
+  border: 2px solid #0c2340;
   border-radius: 50%;
-  width: 46px;
-  height: 46px;
-  font-size: 1.3rem;
+  width: 50px;
+  height: 50px;
+  font-size: 1.4rem;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 .user-avatar-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.1);
   background: #ffe066;
 }
 
 .profile-dropdown {
   position: absolute;
   right: 0;
-  top: 55px;
+  top: 60px; /* Abre logo abaixo do botão do avatar */
   background: #0c2340;
   border: 1px solid #f2c94c;
   border-radius: 12px;
-  padding: 12px;
-  min-width: 200px;
+  padding: 14px;
+  min-width: 220px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  z-index: 120;
 }
 
 .user-greeting {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #f2c94c;
   font-weight: bold;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .dropdown-item {
@@ -163,20 +233,21 @@
 }
 
 /* ==========================================
-   CONTEÚDO HERO CENTRALIZADO (GLASSMORPHISM)
+   CONTEÚDO HERO CENTRAL
    ========================================== */
 .hero-content-container {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 120px 20px 40px 20px;
+  padding: 50px 20px;
+  width: 100%;
 }
 
 .hero-glass-card {
   width: 100%;
   max-width: 680px;
-  background: rgba(12, 35, 64, 0.75);
+  background: rgba(12, 35, 64, 0.78);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(242, 201, 76, 0.4);
   border-radius: 24px;
@@ -210,7 +281,6 @@
   margin-bottom: 32px;
 }
 
-/* BOTÕES DE AÇÃO */
 .cta-buttons-grid {
   display: flex;
   flex-direction: column;
@@ -237,7 +307,6 @@
   font-size: 1.2rem;
 }
 
-/* Botão Amarelo Principal */
 .primary-btn {
   background: linear-gradient(135deg, #f2c94c 0%, #e0b028 100%);
   color: #0c2340;
@@ -251,7 +320,6 @@
   background: #ffe066;
 }
 
-/* Botão Azul Destacado */
 .secondary-btn {
   background: #0c2340;
   color: #f2c94c;
@@ -263,7 +331,6 @@
   background: rgba(242, 201, 76, 0.15);
 }
 
-/* Botão Borda Sutil */
 .outline-btn {
   background: transparent;
   color: #ffffff;
@@ -276,7 +343,6 @@
   color: #f2c94c;
 }
 
-/* CONTATOS RÁPIDOS NO CARD */
 .quick-contacts-bar {
   display: flex;
   align-items: center;
@@ -291,7 +357,6 @@
   color: #f2c94c;
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.2s;
 }
 
 .contact-link:hover {
@@ -322,38 +387,29 @@
 /* ==========================================
    RESPONSIVIDADE (MOBILE)
    ========================================== */
-@media (max-width: 600px) {
-  .navbar-fixed {
-    height: 75px;
-  }
-
-  .brand-mr {
-    font-size: 2rem;
-  }
-
-  .brand-eletricista {
-    font-size: 1.6rem;
-    padding: 2px 8px;
-  }
-
-  .hero-content-container {
-    padding-top: 95px;
-  }
-
-  .hero-glass-card {
-    padding: 24px 16px;
-  }
-
-  .hero-title {
-    font-size: 1.5rem;
-  }
-
-  .quick-contacts-bar {
+@media (max-width: 900px) {
+  .navbar-scroll-sponsor {
+    height: auto;
+    padding: 16px;
+    display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 16px;
   }
 
-  .divider {
-    display: none;
+  .sponsor-box {
+    height: 160px;
+  }
+
+  .brand-mr-large {
+    font-size: 2.4rem;
+  }
+
+  .brand-eletricista-large {
+    font-size: 1.8rem;
+  }
+
+  .user-profile-wrapper {
+    top: 12px;
+    right: 12px;
   }
 }

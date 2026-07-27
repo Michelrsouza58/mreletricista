@@ -2,37 +2,41 @@ import React, { useState } from 'react';
 import './Home.css';
 import banner from '../assets/cartao-mr-eletricista.jpg';
 
-// Importação dos Modais Independentes
+// Imagens dos Patrocinadores
+import patrocinadorEsq from '../assets/cartao-mr-eletricista.jpg';
+import patrocinadorDir from '../assets/takau.png';
+
+// Modais
 import AuthModals from '../components/auth/AuthModals';
 import RequestBudgetModal from '../components/features/RequestBudgetModal';
 import RequestServiceModal from '../components/features/RequestServiceModal';
+import MyRequestsModal from '../components/features/MyRequestsModal';
 
 function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Estados dos Modais de Autenticação
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-
-  // Estado do Modal de Orçamento (Direto)
   const [showBudgetModal, setShowBudgetModal] = useState(false);
-
-  // Estado do Modal de Serviço Agendado (Completo: Dados + Data/Hora)
   const [showServiceModal, setShowServiceModal] = useState(false);
+  const [showRequestsModal, setShowRequestsModal] = useState(false);
 
-  // Callback ao realizar Login/Cadastro
   const handleLoginSuccess = (userData) => {
     setIsLogged(true);
     setUser(userData);
   };
 
-  // Callback de Logout
   const handleLogout = () => {
     setIsLogged(false);
     setUser(null);
     setMenuOpen(false);
+  };
+
+  const handleOpenMyRequests = () => {
+    setMenuOpen(false);
+    setShowRequestsModal(true);
   };
 
   return (
@@ -44,46 +48,60 @@ function Home() {
       />
       <div className="bg-overlay-gradient" />
 
-      {/* HEADER FIXO NO TOPO */}
-      <header className="navbar-fixed">
-        <div className="logo-container">
-          <span className="brand-mr">MR</span>
-          <span className="brand-eletricista">ELETRICISTA</span>
+      {/* HEADER ÚNICO COM PATROCINADORES E LOGO CENTRAL */}
+      <header className="navbar-scroll-sponsor">
+        {/* Patrocinador Esquerda */}
+        <div className="sponsor-box left">
+          <img src={patrocinadorEsq} alt="Patrocinador Esquerda" className="sponsor-img" />
         </div>
 
-        {/* ÁREA DE PERFIL / MENU DROPDOWN */}
-        <div className="user-profile-wrapper">
-          <button 
-            className="user-avatar-btn" 
-            onClick={() => setMenuOpen(!menuOpen)}
-            title="Menu do Perfil"
-          >
-            👤
-          </button>
+        {/* Logo Único MR Eletricista no Centro */}
+        <div className="logo-container-large">
+          <span className="brand-mr-large">MR</span>
+          <span className="brand-eletricista-large">ELETRICISTA</span>
+        </div>
 
-          {menuOpen && (
-            <div className="profile-dropdown">
-              {isLogged ? (
-                <>
-                  <p className="user-greeting">
-                    Olá, {user?.nome || user?.nomeCompleto || 'Cliente'}!
-                  </p>
-                  <button className="dropdown-item">Meus Pedidos</button>
-                  <button className="dropdown-item" onClick={handleLogout}>Sair</button>
-                </>
-              ) : (
-                <button 
-                  className="dropdown-item highlight"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setShowLoginModal(true);
-                  }}
-                >
-                  Entrar / Cadastrar
-                </button>
-              )}
-            </div>
-          )}
+        {/* Patrocinador Direita + Avatar Perfil */}
+        <div className="sponsor-box right">
+          <img src={patrocinadorDir} alt="Patrocinador Takau" className="sponsor-img" />
+
+          <div className="user-profile-wrapper">
+            <button 
+              className="user-avatar-btn" 
+              onClick={() => setMenuOpen(!menuOpen)}
+              title="Menu do Perfil"
+            >
+              👤
+            </button>
+
+            {menuOpen && (
+              <div className="profile-dropdown">
+                {isLogged ? (
+                  <>
+                    <p className="user-greeting">
+                      Olá, {user?.nome || user?.nomeCompleto || 'Cliente'}!
+                    </p>
+                    <button className="dropdown-item" onClick={handleOpenMyRequests}>
+                      Meus Pedidos
+                    </button>
+                    <button className="dropdown-item" onClick={handleLogout}>
+                      Sair
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    className="dropdown-item highlight"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setShowLoginModal(true);
+                    }}
+                  >
+                    Entrar / Cadastrar
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -100,7 +118,6 @@ function Home() {
           </p>
 
           <div className="cta-buttons-grid">
-            {/* 1. SOLICITAR ORÇAMENTO (Apenas cotação rápida) */}
             <button 
               className="cta-btn primary-btn"
               onClick={() => setShowBudgetModal(true)}
@@ -109,7 +126,6 @@ function Home() {
               <span>Solicitar Orçamento</span>
             </button>
 
-            {/* 2. SOLICITAR SERVIÇO (Dados do serviço + Agendamento de Data/Hora) */}
             <button 
               className="cta-btn secondary-btn"
               onClick={() => setShowServiceModal(true)}
@@ -118,16 +134,9 @@ function Home() {
               <span>Solicitar Serviço</span>
             </button>
 
-            {/* 3. CONSULTAR PEDIDO */}
             <button 
               className="cta-btn outline-btn"
-              onClick={() => {
-                if (!isLogged) {
-                  setShowLoginModal(true);
-                } else {
-                  alert('Carregando seus pedidos...');
-                }
-              }}
+              onClick={() => setShowRequestsModal(true)}
             >
               <span className="btn-icon">🔍</span>
               <span>Consultar Pedido</span>
@@ -156,11 +165,7 @@ function Home() {
         </div>
       </main>
 
-      {/* ==========================================
-          GERENCIAMENTO DOS MODAIS
-          ========================================== */}
-
-      {/* Modais de Autenticação */}
+      {/* MODAIS */}
       <AuthModals
         showLoginModal={showLoginModal}
         setShowLoginModal={setShowLoginModal}
@@ -169,22 +174,24 @@ function Home() {
         onLoginSuccess={handleLoginSuccess}
       />
 
-      {/* Modal 1: Solicitar Orçamento (Formulário Direto) */}
       <RequestBudgetModal
         isOpen={showBudgetModal}
         onClose={() => setShowBudgetModal(false)}
-        onSubmitSuccess={(dados) => {
-          console.log('Orçamento salvo:', dados);
-        }}
+        userEmail={user?.email}
+        onSubmitSuccess={(dados) => console.log('Orçamento salvo:', dados)}
       />
 
-      {/* Modal 2: Solicitar Serviço Agendado (Passo 1: Dados -> Passo 2: Data/Hora) */}
       <RequestServiceModal
         isOpen={showServiceModal}
         onClose={() => setShowServiceModal(false)}
-        onSubmitSuccess={(dados) => {
-          console.log('Serviço Agendado salvo:', dados);
-        }}
+        userEmail={user?.email}
+        onSubmitSuccess={(dados) => console.log('Serviço Agendado salvo:', dados)}
+      />
+
+      <MyRequestsModal
+        isOpen={showRequestsModal}
+        onClose={() => setShowRequestsModal(false)}
+        userEmail={user?.email}
       />
 
       {/* RODAPÉ */}

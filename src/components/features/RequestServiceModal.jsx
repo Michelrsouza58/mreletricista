@@ -1,19 +1,20 @@
 // src/components/features/RequestServiceModal.jsx
 import React, { useState, useEffect } from 'react';
 import './RequestServiceModal.css';
+import { db } from '../../services/firebase';
+import { ref, push, set } from 'firebase/database';
 
-export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }) {
-  // Estado para controlar qual tela do formulário será exibida (1 = Dados, 2 = Data/Hora)
+export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, userEmail }) {
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  // RESET OBRIGATÓRIO: Toda vez que o modal abre (isOpen vira true), FORÇA voltar para o Passo 1
   useEffect(() => {
     if (isOpen) {
       setStep(1);
     }
   }, [isOpen]);
 
-  // ETAPA 1: Estados dos dados do Serviço
+  // ETAPA 1
   const [imovel, setImovel] = useState('Residencial');
   const [servicosSelecionados, setServicosSelecionados] = useState([]);
   const [bairro, setBairro] = useState('');
@@ -22,7 +23,7 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
   const [imagem, setImagem] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
 
-  // ETAPA 2: Estados do Agendamento (Data e Hora)
+  // ETAPA 2
   const [dataSelecionada, setDataSelecionada] = useState('');
   const [periodoSelecionado, setPeriodoSelecionado] = useState('');
 
@@ -35,7 +36,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
     { id: 'manutencao', label: 'Reparo de Curto-Circuito', icon: '🛠️' },
   ];
 
-  // Gera os próximos 5 dias úteis
   const gerarProximosDias = () => {
     const dias = [];
     const hoje = new Date();
@@ -70,29 +70,53 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!dataSelecionada || !periodoSelecionado) {
       alert('Por favor, selecione o dia e o período da visita.');
       return;
     }
 
-    const serviceData = {
-      tipo: 'Solicitação de Serviço Agendado',
-      imovel,
-      servicos: servicosSelecionados,
-      bairro,
-      urgencia,
-      descricao,
-      imagem,
-      dataAgendamento: dataSelecionada,
-      periodo: periodoSelecionado,
-      dataCriacao: new Date()
-    };
+    try {
+      setLoading(true);
 
-    alert('Serviço agendado com sucesso! Confirmaremos a visita em breve.');
-    if (onSubmitSuccess) onSubmitSuccess(serviceData);
-    onClose();
+      const emailTratado = userEmail ? String(userEmail).trim().toLowerCase() : '';
+
+      const serviceData = {
+        tipo: 'Solicitação de Serviço Agendado',
+        email: emailTratado,
+        imovel,
+        servicos: servicosSelecionados,
+        bairro,
+        urgencia,
+        descricao,
+        dataAgendamento: dataSelecionada,
+        periodo: periodoSelecionado,
+        status: 'Pendente',
+        criadoEm: new Date().toISOString()
+      };
+
+      const servicosRef = ref(db, 'servicos_agendados');
+      const novoServicoRef = push(servicosRef);
+      await set(novoServicoRef, serviceData);
+
+      alert(`Serviço agendado com sucesso! Código do Agendamento: ${novoServicoRef.key}`);
+      if (onSubmitSuccess) onSubmitSuccess({ id: novoServicoRef.key, ...serviceData });
+
+      // Limpeza de campos
+      setServicosSelecionados([]);
+      setBairro('');
+      setDescricao('');
+      setDataSelecionada('');
+      setPeriodoSelecionado('');
+      setPreviewUrl('');
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar agendamento no Realtime Database:', error);
+      alert('Ocorreu um erro ao agendar o serviço. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -108,10 +132,8 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
         </p>
 
         <form onSubmit={handleSubmit} className="service-form">
-          {/* ================= PASSO 1: DADOS DO SERVIÇO ================= */}
           {step === 1 && (
             <div className="step-container">
-              {/* 1. Imóvel */}
               <div className="form-group">
                 <label className="section-label">1. Tipo de Imóvel</label>
                 <div className="radio-group-imovel">
@@ -128,7 +150,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
                 </div>
               </div>
 
-              {/* 2. Seleção dos Serviços */}
               <div className="form-group">
                 <label className="section-label">2. Qual serviço você precisa?</label>
                 <div className="services-grid-select">
@@ -148,7 +169,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
                 </div>
               </div>
 
-              {/* 3. Bairro */}
               <div className="form-group">
                 <label className="section-label">3. Bairro / Localidade *</label>
                 <input
@@ -160,7 +180,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
                 />
               </div>
 
-              {/* 4. Urgência */}
               <div className="form-group">
                 <label className="section-label">4. Urgência do Atendimento</label>
                 <select value={urgencia} onChange={(e) => setUrgencia(e.target.value)}>
@@ -170,7 +189,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
                 </select>
               </div>
 
-              {/* 5. Descrição */}
               <div className="form-group">
                 <label className="section-label">5. Descrição / Observações</label>
                 <textarea
@@ -181,7 +199,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
                 />
               </div>
 
-              {/* 6. Foto */}
               <div className="form-group">
                 <label className="section-label">6. Foto do Local/Quadro (Opcional)</label>
                 <input type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
@@ -192,7 +209,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
                 )}
               </div>
 
-              {/* Botão de Avanço */}
               <button
                 type="button"
                 className="btn-submit-service"
@@ -204,7 +220,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
             </div>
           )}
 
-          {/* ================= PASSO 2: SELEÇÃO DE DATA E HORA ================= */}
           {step === 2 && (
             <div className="step-container">
               <div className="form-group">
@@ -246,15 +261,15 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess }
               </div>
 
               <div className="modal-actions-service">
-                <button type="button" className="btn-back" onClick={() => setStep(1)}>
+                <button type="button" className="btn-back" onClick={() => setStep(1)} disabled={loading}>
                   ⬅ Voltar
                 </button>
                 <button 
                   type="submit" 
                   className="btn-submit-service"
-                  disabled={!dataSelecionada || !periodoSelecionado}
+                  disabled={!dataSelecionada || !periodoSelecionado || loading}
                 >
-                  Finalizar Agendamento 🚀
+                  {loading ? 'Finalizando...' : 'Finalizar Agendamento 🚀'}
                 </button>
               </div>
             </div>

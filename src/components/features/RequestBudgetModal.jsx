@@ -1,8 +1,10 @@
 // src/components/features/RequestBudgetModal.jsx
 import React, { useState } from 'react';
 import './RequestServiceModal.css';
+import { db } from '../../services/firebase';
+import { ref, push, set } from 'firebase/database';
 
-export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess }) {
+export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, userEmail }) {
   const [imovel, setImovel] = useState('Residencial');
   const [servicosSelecionados, setServicosSelecionados] = useState([]);
   const [urgencia, setUrgencia] = useState('Normal');
@@ -10,6 +12,7 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
   const [descricao, setDescricao] = useState('');
   const [imagem, setImagem] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const listaServicos = [
     { id: 'chuveiro', label: 'Chuveiro / Torneira Elétrica', icon: '🚿' },
@@ -36,27 +39,50 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (servicosSelecionados.length === 0) {
       alert('Por favor, selecione ao menos um tipo de serviço.');
       return;
     }
 
-    const budgetData = {
-      tipo: 'Solicitação de Orçamento',
-      imovel,
-      servicos: servicosSelecionados,
-      urgencia,
-      bairro,
-      descricao,
-      imagem,
-      dataCriacao: new Date()
-    };
+    try {
+      setLoading(true);
 
-    alert('Solicitação de orçamento enviada com sucesso! Entraremos em contato em breve.');
-    if (onSubmitSuccess) onSubmitSuccess(budgetData);
-    onClose();
+      // Tratamento para capturar o e-mail limpo do usuário
+      const emailTratado = userEmail ? String(userEmail).trim().toLowerCase() : '';
+
+      const budgetData = {
+        tipo: 'Solicitação de Orçamento',
+        email: emailTratado,
+        imovel,
+        servicos: servicosSelecionados,
+        urgencia,
+        bairro,
+        descricao,
+        status: 'Pendente',
+        criadoEm: new Date().toISOString()
+      };
+
+      const orcamentosRef = ref(db, 'orcamentos');
+      const novoOrcamentoRef = push(orcamentosRef);
+      await set(novoOrcamentoRef, budgetData);
+
+      alert(`Solicitação enviada com sucesso! Código do Orçamento: ${novoOrcamentoRef.key}`);
+      if (onSubmitSuccess) onSubmitSuccess({ id: novoOrcamentoRef.key, ...budgetData });
+      
+      // Limpeza de campos e fechamento
+      setServicosSelecionados([]);
+      setBairro('');
+      setDescricao('');
+      setPreviewUrl('');
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar orçamento no Realtime Database:', error);
+      alert('Ocorreu um erro ao enviar a solicitação. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -106,7 +132,7 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
           </div>
 
           <div className="form-group">
-            <label>Bairro / Localidade (José Bonifácio e Região)</label>
+            <label className="section-label">3. Bairro / Localidade (José Bonifácio e Região)</label>
             <input
               type="text"
               required
@@ -117,7 +143,7 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
           </div>
 
           <div className="form-group">
-            <label>Urgência do Orçamento</label>
+            <label className="section-label">4. Urgência do Orçamento</label>
             <select value={urgencia} onChange={(e) => setUrgencia(e.target.value)}>
               <option value="Normal">🟢 Normal - Pesquisando preços</option>
               <option value="Pouca Urgência">🟡 Próximos dias</option>
@@ -126,7 +152,7 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
           </div>
 
           <div className="form-group">
-            <label>Descrição detalhada do problema</label>
+            <label className="section-label">5. Descrição detalhada do problema</label>
             <textarea
               rows="2"
               placeholder="Descreva brevemente o que precisa ser feito..."
@@ -136,7 +162,7 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
           </div>
 
           <div className="form-group">
-            <label>Foto do Local/Quadro (Opcional)</label>
+            <label className="section-label">6. Foto do Local/Quadro (Opcional)</label>
             <input type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
             {previewUrl && (
               <div className="image-preview">
@@ -148,9 +174,9 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess })
           <button 
             type="submit" 
             className="btn-submit-service"
-            disabled={servicosSelecionados.length === 0 || !bairro}
+            disabled={servicosSelecionados.length === 0 || !bairro.trim() || loading}
           >
-            Enviar Pedido de Orçamento 🚀
+            {loading ? 'Enviando...' : 'Enviar Pedido de Orçamento 🚀'}
           </button>
         </form>
       </div>

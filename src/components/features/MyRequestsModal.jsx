@@ -1,0 +1,224 @@
+// src/components/features/MyRequestsModal.jsx
+import React, { useState, useEffect } from 'react';
+import './MyRequestsModal.css';
+import { db } from '../../services/firebase';
+import { ref, get } from 'firebase/database';
+
+export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
+  const [solicitacoes, setSolicitacoes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [filter, setFilter] = useState('todos'); // 'todos', 'orcamentos', 'servicos'
+
+  useEffect(() => {
+    if (isOpen) {
+      carregarSolicitacoes();
+    }
+  }, [isOpen, userEmail]);
+
+  const carregarSolicitacoes = async () => {
+    setLoading(true);
+    const lista = [];
+
+    try {
+      const emailUsuario = userEmail ? userEmail.toLowerCase().trim() : null;
+
+      // 1. Busca na subpasta exata do banco: "orcamentos"
+      const orcamentosRef = ref(db, 'orcamentos');
+      const snapOrcamentos = await get(orcamentosRef);
+      
+      if (snapOrcamentos.exists()) {
+        const data = snapOrcamentos.val();
+        Object.keys(data).forEach((key) => {
+          const item = data[key];
+          // Se o usuário estiver logado, traz os dele; se não, exibe a lista geral de orçamentos
+          if (!emailUsuario || (item.email && item.email.toLowerCase().trim() === emailUsuario)) {
+            lista.push({ id: key, categoria: 'Orcamento', ...item });
+          }
+        });
+      }
+
+      // 2. Busca na subpasta de Serviços Agendados: "servicos_agendados"
+      const servicosRef = ref(db, 'servicos_agendados');
+      const snapServicos = await get(servicosRef);
+      
+      if (snapServicos.exists()) {
+        const data = snapServicos.val();
+        Object.keys(data).forEach((key) => {
+          const item = data[key];
+          if (!emailUsuario || (item.email && item.email.toLowerCase().trim() === emailUsuario)) {
+            lista.push({ id: key, categoria: 'ServicoAgendado', ...item });
+          }
+        });
+      }
+
+      // Ordena pelos mais recentes
+      lista.sort((a, b) => new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0));
+      setSolicitacoes(lista);
+    } catch (error) {
+      console.error('Erro ao buscar solicitações:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  // CORREÇÃO AQUI: 'Orcamento' com O maiúsculo
+  const solicitacoesFiltradas = solicitacoes.filter((item) => {
+    if (filter === 'orcamentos') return item.categoria === 'Orcamento';
+    if (filter === 'servicos') return item.categoria === 'ServicoAgendado';
+    return true;
+  });
+
+  return (
+    <div className="modal-backdrop-requests">
+      <div className="modal-card-requests">
+        <button className="modal-close-btn" onClick={onClose}>✕</button>
+
+        <h3 className="modal-title-requests">Minhas Solicitações</h3>
+        <p className="modal-subtitle-requests">
+          Acompanhe o status e detalhes dos seus orçamentos e agendamentos
+        </p>
+
+        {/* FILTROS DE TIPO */}
+        <div className="requests-filter-bar">
+          <button
+            className={`filter-btn ${filter === 'todos' ? 'active' : ''}`}
+            onClick={() => setFilter('todos')}
+          >
+            Todos ({solicitacoes.length})
+          </button>
+          <button
+            className={`filter-btn ${filter === 'orcamentos' ? 'active' : ''}`}
+            onClick={() => setFilter('orcamentos')}
+          >
+            📋 Orçamentos
+          </button>
+          <button
+            className={`filter-btn ${filter === 'servicos' ? 'active' : ''}`}
+            onClick={() => setFilter('servicos')}
+          >
+            ⚡ Agendamentos
+          </button>
+        </div>
+
+        {/* LISTAGEM DOS CARDS */}
+        {loading ? (
+          <div className="requests-loading">Carregando suas solicitações...</div>
+        ) : solicitacoesFiltradas.length === 0 ? (
+          <div className="requests-empty">
+            <span className="empty-icon">📂</span>
+            <p>Nenhuma solicitação encontrada.</p>
+          </div>
+        ) : (
+          <div className="requests-grid">
+            {solicitacoesFiltradas.map((item) => (
+              <div
+                key={item.id}
+                className="request-summary-card"
+                onClick={() => setSelectedRequest(item)}
+              >
+                <div className="card-header-type">
+                  <span className={`badge-type ${item.categoria}`}>
+                    {item.categoria === 'Orcamento' ? '📋 Orçamento' : '⚡ Agendamento'}
+                  </span>
+                  <span className={`badge-status ${item.status?.toLowerCase() || 'pendente'}`}>
+                    {item.status || 'Pendente'}
+                  </span>
+                </div>
+
+                <div className="card-body-summary">
+                  <strong className="summary-title">
+                    {item.servicos ? item.servicos.join(', ') : 'Serviço Elétrico'}
+                  </strong>
+                  <p className="summary-info">📍 {item.bairro || 'José Bonifácio'}</p>
+                  {item.dataAgendamento && (
+                    <p className="summary-info">📅 Visita: {item.dataAgendamento} ({item.periodo})</p>
+                  )}
+                </div>
+
+                <div className="card-footer-action">
+                  <span>Ver detalhes completos ➔</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* DETALHES AMPLIADOS (MODAL INTERNO DE DETALHES) */}
+        {selectedRequest && (
+          <div className="detail-modal-overlay" onClick={() => setSelectedRequest(null)}>
+            <div className="detail-modal-card" onClick={(e) => e.stopPropagation()}>
+              <button className="detail-close-btn" onClick={() => setSelectedRequest(null)}>✕</button>
+
+              <div className="detail-header">
+                <span className={`badge-type ${selectedRequest.categoria}`}>
+                  {selectedRequest.categoria === 'Orcamento' ? '📋 Orçamento' : '⚡ Agendamento'}
+                </span>
+                <h4>Código: #{selectedRequest.id.substring(0, 8)}</h4>
+              </div>
+
+              <div className="detail-body">
+                <div className="detail-group">
+                  <label>Status Atual</label>
+                  <span className={`status-pill ${selectedRequest.status?.toLowerCase() || 'pendente'}`}>
+                    {selectedRequest.status || 'Pendente'}
+                  </span>
+                </div>
+
+                <div className="detail-group">
+                  <label>Tipo de Imóvel</label>
+                  <p>{selectedRequest.imovel || 'Não informado'}</p>
+                </div>
+
+                <div className="detail-group">
+                  <label>Serviços Solicitados</label>
+                  <ul>
+                    {selectedRequest.servicos?.map((s, idx) => (
+                      <li key={idx}>⚡ {s}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="detail-group">
+                  <label>Bairro / Localidade</label>
+                  <p>{selectedRequest.bairro}</p>
+                </div>
+
+                <div className="detail-group">
+                  <label>Urgência</label>
+                  <p>{selectedRequest.urgencia}</p>
+                </div>
+
+                {selectedRequest.dataAgendamento && (
+                  <div className="detail-group highlight-box">
+                    <label>Data & Horário Agendado</label>
+                    <p>📅 {selectedRequest.dataAgendamento} &bull; {selectedRequest.periodo}</p>
+                  </div>
+                )}
+
+                {selectedRequest.descricao && (
+                  <div className="detail-group">
+                    <label>Observações / Descrição</label>
+                    <p className="description-text">{selectedRequest.descricao}</p>
+                  </div>
+                )}
+
+                {selectedRequest.criadoEm && (
+                  <div className="detail-group date-created">
+                    <small>Criado em: {new Date(selectedRequest.criadoEm).toLocaleString('pt-BR')}</small>
+                  </div>
+                )}
+              </div>
+
+              <button className="btn-close-detail" onClick={() => setSelectedRequest(null)}>
+                Fechar Detalhes
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
