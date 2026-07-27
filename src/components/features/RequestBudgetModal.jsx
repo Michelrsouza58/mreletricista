@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './RequestServiceModal.css';
 import { db } from '../../services/firebase';
 import { ref, push, set } from 'firebase/database';
+import OtherServicesModal from './OtherServicesModal'; // Importando o modal de outros serviços
 
 export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, userEmail }) {
   const [imovel, setImovel] = useState('Residencial');
@@ -13,8 +14,9 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
   const [imagem, setImagem] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showOtherModal, setShowOtherModal] = useState(false); // Estado para abrir o sub-modal
 
-  const listaServicos = [
+  const listaServicosFixos = [
     { id: 'chuveiro', label: 'Chuveiro / Torneira Elétrica', icon: '🚿' },
     { id: 'ventilador', label: 'Ventilador de Teto / Parede', icon: '🌀' },
     { id: 'quadro', label: 'Quadro de Disjuntores / Padrão', icon: '⚡' },
@@ -29,6 +31,11 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
     } else {
       setServicosSelecionados([...servicosSelecionados, label]);
     }
+  };
+
+  // Função para receber o item escolhido lá do sub-modal de Outros
+  const handleAddOtherService = (servicoFormatado) => {
+    setServicosSelecionados([...servicosSelecionados, servicoFormatado]);
   };
 
   const handleImageChange = (e) => {
@@ -49,7 +56,6 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
     try {
       setLoading(true);
 
-      // Tratamento para capturar o e-mail limpo do usuário
       const emailTratado = userEmail ? String(userEmail).trim().toLowerCase() : '';
 
       const budgetData = {
@@ -88,98 +94,128 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop-service">
-      <div className="modal-card-service">
-        <button className="modal-close-btn" onClick={onClose}>✕</button>
+    <>
+      <div className="modal-backdrop-service">
+        <div className="modal-card-service">
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
 
-        <h3 className="modal-title-service">Solicitar Orçamento</h3>
-        <p className="modal-subtitle-service">Preencha os dados abaixo para receber sua cotação</p>
+          <h3 className="modal-title-service">Solicitar Orçamento</h3>
+          <p className="modal-subtitle-service">Preencha os dados abaixo para receber sua cotação</p>
 
-        <form onSubmit={handleSubmit} className="service-form">
-          <div className="form-group">
-            <label className="section-label">1. Tipo de Imóvel</label>
-            <div className="radio-group-imovel">
-              {['Residencial', 'Comercial', 'Chácara / Rural'].map((tipo) => (
-                <button
-                  key={tipo}
-                  type="button"
-                  className={`btn-option ${imovel === tipo ? 'selected' : ''}`}
-                  onClick={() => setImovel(tipo)}
-                >
-                  {tipo}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="section-label">2. Quais itens precisam de orçamento?</label>
-            <div className="services-grid-select">
-              {listaServicos.map((serv) => {
-                const isSelected = servicosSelecionados.includes(serv.label);
-                return (
-                  <div
-                    key={serv.id}
-                    className={`service-card-option ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleToggleServico(serv.label)}
+          <form onSubmit={handleSubmit} className="service-form">
+            <div className="form-group">
+              <label className="section-label">1. Tipo de Imóvel</label>
+              <div className="radio-group-imovel">
+                {['Residencial', 'Comercial', 'Chácara / Rural'].map((tipo) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    className={`btn-option ${imovel === tipo ? 'selected' : ''}`}
+                    onClick={() => setImovel(tipo)}
                   >
-                    <span className="card-icon">{serv.icon}</span>
-                    <span className="card-label">{serv.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="section-label">3. Bairro / Localidade (José Bonifácio e Região)</label>
-            <input
-              type="text"
-              required
-              placeholder="Ex: Centro, Bairro São José..."
-              value={bairro}
-              onChange={(e) => setBairro(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="section-label">4. Urgência do Orçamento</label>
-            <select value={urgencia} onChange={(e) => setUrgencia(e.target.value)}>
-              <option value="Normal">🟢 Normal - Pesquisando preços</option>
-              <option value="Pouca Urgência">🟡 Próximos dias</option>
-              <option value="Urgente">🔴 Urgente - Problema grave</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="section-label">5. Descrição detalhada do problema</label>
-            <textarea
-              rows="2"
-              placeholder="Descreva brevemente o que precisa ser feito..."
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="section-label">6. Foto do Local/Quadro (Opcional)</label>
-            <input type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
-            {previewUrl && (
-              <div className="image-preview">
-                <img src={previewUrl} alt="Preview do local" />
+                    {tipo}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          <button 
-            type="submit" 
-            className="btn-submit-service"
-            disabled={servicosSelecionados.length === 0 || !bairro.trim() || loading}
-          >
-            {loading ? 'Enviando...' : 'Enviar Pedido de Orçamento 🚀'}
-          </button>
-        </form>
+            <div className="form-group">
+              <label className="section-label">2. Quais itens precisam de orçamento?</label>
+              <div className="services-grid-select">
+                {listaServicosFixos.map((serv) => {
+                  const isSelected = servicosSelecionados.includes(serv.label);
+                  return (
+                    <div
+                      key={serv.id}
+                      className={`service-card-option ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleToggleServico(serv.label)}
+                    >
+                      <span className="card-icon">{serv.icon}</span>
+                      <span className="card-label">{serv.label}</span>
+                    </div>
+                  );
+                })}
+
+                {/* BOTÃO PARA ABRIR O MODAL DE OUTROS SERVIÇOS ESPECIALIZADOS */}
+                <div
+                  className={`service-card-option ${servicosSelecionados.some(s => s.startsWith('Especializado:')) ? 'selected' : ''}`}
+                  onClick={() => setShowOtherModal(true)}
+                >
+                  <span className="card-icon">🔧</span>
+                  <span className="card-label">Outros (Encanamento, Segurança, Automação...)</span>
+                </div>
+              </div>
+
+              {/* Exibe os itens especializados adicionados */}
+              {servicosSelecionados.filter(s => s.startsWith('Especializado:')).length > 0 && (
+                <div style={{ marginTop: '10px', fontSize: '13px', color: '#f2c94c' }}>
+                  <strong>Itens especializados selecionados:</strong>
+                  <ul>
+                    {servicosSelecionados.filter(s => s.startsWith('Especializado:')).map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label className="section-label">3. Bairro / Localidade (José Bonifácio e Região)</label>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Centro, Bairro São José..."
+                value={bairro}
+                onChange={(e) => setBairro(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="section-label">4. Urgência do Orçamento</label>
+              <select value={urgencia} onChange={(e) => setUrgencia(e.target.value)}>
+                <option value="Normal">🟢 Normal - Pesquisando preços</option>
+                <option value="Pouca Urgência">🟡 Próximos dias</option>
+                <option value="Urgente">🔴 Urgente - Problema grave</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="section-label">5. Descrição detalhada do problema</label>
+              <textarea
+                rows="2"
+                placeholder="Descreva brevemente o que precisa ser feito..."
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="section-label">6. Foto do Local/Quadro (Opcional)</label>
+              <input type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
+              {previewUrl && (
+                <div className="image-preview">
+                  <img src={previewUrl} alt="Preview do local" />
+                </div>
+              )}
+            </div>
+
+            <button 
+              type="submit" 
+              className="btn-submit-service"
+              disabled={servicosSelecionados.length === 0 || !bairro.trim() || loading}
+            >
+              {loading ? 'Enviando...' : 'Enviar Pedido de Orçamento 🚀'}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+
+      {/* Modal de Outros Serviços Especializados Reutilizável */}
+      <OtherServicesModal
+        isOpen={showOtherModal}
+        onClose={() => setShowOtherModal(false)}
+        onSelectOtherService={handleAddOtherService}
+      />
+    </>
   );
 }
