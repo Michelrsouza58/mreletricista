@@ -1,8 +1,9 @@
 // src/components/features/RequestServiceModal.jsx
 import React, { useState, useEffect } from 'react';
 import './RequestServiceModal.css';
-import { db } from '../../services/firebase';
+import { db, storage } from '../../services/firebase';
 import { ref, push, set } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import OtherServicesModal from './OtherServicesModal';
 
 export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, userEmail }) {
@@ -14,6 +15,8 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
     if (isOpen) {
       setStep(1);
       setServicosSelecionados([]);
+      setImagens([]);
+      setPreviews([]);
     }
   }, [isOpen]);
 
@@ -23,8 +26,10 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
   const [bairro, setBairro] = useState('');
   const [urgencia, setUrgencia] = useState('Normal');
   const [descricao, setDescricao] = useState('');
-  const [imagem, setImagem] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  
+  // Estados para gerenciar até 3 fotos no agendamento
+  const [imagens, setImagens] = useState([]);
+  const [previews, setPreviews] = useState([]);
 
   // ETAPA 2
   const [dataSelecionada, setDataSelecionada] = useState('');
@@ -69,12 +74,26 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
     setServicosSelecionados([...servicosSelecionados, servicoFormatado]);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImagem(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+  // Gerenciamento seguro de até 3 fotos
+  const handleImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setImagens((prevImagens) => {
+      const combinadas = [...prevImagens, ...files].slice(0, 3);
+      const novasPreviews = combinadas.map((file) => URL.createObjectURL(file));
+      setPreviews(novasPreviews);
+      return combinadas;
+    });
+
+    e.target.value = null;
+  };
+
+  const handleRemoveImage = (index) => {
+    const novasImagens = imagens.filter((_, i) => i !== index);
+    const novasPreviews = previews.filter((_, i) => i !== index);
+    setImagens(novasImagens);
+    setPreviews(novasPreviews);
   };
 
   const handleSubmit = async (e) => {
@@ -86,9 +105,21 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
 
     try {
       setLoading(true);
-
       const emailTratado = userEmail ? String(userEmail).trim().toLowerCase() : '';
 
+      // 1. Upload das fotos para o Firebase Storage
+      const urlsFotos = [];
+      for (let i = 0; i < imagens.length; i++) {
+        const file = imagens[i];
+        const nomeArquivo = `agendamentos/${Date.now()}_${i}_${file.name}`;
+        const arquivoRef = storageRef(storage, nomeArquivo);
+        
+        await uploadBytes(arquivoRef, file);
+        const downloadUrl = await getDownloadURL(arquivoRef);
+        urlsFotos.push(downloadUrl);
+      }
+
+      // 2. Monta o objeto completo com as URLs das fotos
       const serviceData = {
         tipo: 'Solicitação de Serviço Agendado',
         email: emailTratado,
@@ -97,6 +128,7 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
         bairro,
         urgencia,
         descricao,
+        fotos: urlsFotos, // Array de URLs das fotos salvas no Storage
         dataAgendamento: dataSelecionada,
         periodo: periodoSelecionado,
         status: 'Pendente',
@@ -116,7 +148,8 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
       setDescricao('');
       setDataSelecionada('');
       setPeriodoSelecionado('');
-      setPreviewUrl('');
+      setImagens([]);
+      setPreviews([]);
       onClose();
     } catch (error) {
       console.error('Erro ao salvar agendamento no Realtime Database:', error);
@@ -175,7 +208,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
                       );
                     })}
 
-                    {/* BOTÃO PARA ABRIR O MODAL DE OUTROS SERVIÇOS ESPECIALIZADOS */}
                     <div
                       className={`service-card-option ${servicosSelecionados.some(s => s.startsWith('Especializado:')) ? 'selected' : ''}`}
                       onClick={() => setShowOtherModal(true)}
@@ -185,7 +217,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
                     </div>
                   </div>
 
-                  {/* Exibe os itens especializados adicionados */}
                   {servicosSelecionados.filter(s => s.startsWith('Especializado:')).length > 0 && (
                     <div style={{ marginTop: '10px', fontSize: '13px', color: '#f2c94c' }}>
                       <strong>Itens especializados selecionados:</strong>
@@ -229,11 +260,35 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
                 </div>
 
                 <div className="form-group">
-                  <label className="section-label">6. Foto do Local/Quadro (Opcional)</label>
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
-                  {previewUrl && (
-                    <div className="image-preview">
-                      <img src={previewUrl} alt="Preview do local" />
+                  <label className="section-label">6. Fotos do Local/Quadro (Máximo 3 fotos)</label>
+                  {imagens.length < 3 && (
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={handleImagesChange} 
+                      className="file-input" 
+                    />
+                  )}
+                  
+                  {previews.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                      {previews.map((src, index) => (
+                        <div key={index} style={{ position: 'relative', width: '70px', height: '70px' }}>
+                          <img 
+                            src={src} 
+                            alt={`Preview ${index}`} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid #f2c94c' }} 
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveImage(index)}
+                            style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -298,7 +353,7 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
                     className="btn-submit-service"
                     disabled={!dataSelecionada || !periodoSelecionado || loading}
                   >
-                    {loading ? 'Finalizando...' : 'Finalizar Agendamento 🚀'}
+                    {loading ? 'Enviando Fotos e Agendando...' : 'Finalizar Agendamento 🚀'}
                   </button>
                 </div>
               </div>
@@ -307,7 +362,6 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
         </div>
       </div>
 
-      {/* Modal de Outros Serviços Especializados */}
       <OtherServicesModal
         isOpen={showOtherModal}
         onClose={() => setShowOtherModal(false)}

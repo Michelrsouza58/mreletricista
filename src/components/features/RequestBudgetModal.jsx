@@ -1,9 +1,10 @@
 // src/components/features/RequestBudgetModal.jsx
 import React, { useState } from 'react';
 import './RequestServiceModal.css';
-import { db } from '../../services/firebase';
+import { db, storage } from '../../services/firebase';
 import { ref, push, set } from 'firebase/database';
-import OtherServicesModal from './OtherServicesModal'; // Importando o modal de outros serviços
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import OtherServicesModal from './OtherServicesModal';
 
 export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, userEmail }) {
   const [imovel, setImovel] = useState('Residencial');
@@ -11,10 +12,12 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
   const [urgencia, setUrgencia] = useState('Normal');
   const [bairro, setBairro] = useState('');
   const [descricao, setDescricao] = useState('');
-  const [imagem, setImagem] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  
+  const [imagens, setImagens] = useState([]);
+  const [previews, setPreviews] = useState([]);
+  
   const [loading, setLoading] = useState(false);
-  const [showOtherModal, setShowOtherModal] = useState(false); // Estado para abrir o sub-modal
+  const [showOtherModal, setShowOtherModal] = useState(false);
 
   const listaServicosFixos = [
     { id: 'chuveiro', label: 'Chuveiro / Torneira Elétrica', icon: '🚿' },
@@ -33,17 +36,29 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
     }
   };
 
-  // Função para receber o item escolhido lá do sub-modal de Outros
   const handleAddOtherService = (servicoFormatado) => {
     setServicosSelecionados([...servicosSelecionados, servicoFormatado]);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImagem(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+  const handleImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setImagens((prevImagens) => {
+      const combinadas = [...prevImagens, ...files].slice(0, 3);
+      const novasPreviews = combinadas.map((file) => URL.createObjectURL(file));
+      setPreviews(novasPreviews);
+      return combinadas;
+    });
+
+    e.target.value = null;
+  };
+
+  const handleRemoveImage = (index) => {
+    const novasImagens = imagens.filter((_, i) => i !== index);
+    const novasPreviews = previews.filter((_, i) => i !== index);
+    setImagens(novasImagens);
+    setPreviews(novasPreviews);
   };
 
   const handleSubmit = async (e) => {
@@ -55,8 +70,18 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
 
     try {
       setLoading(true);
-
       const emailTratado = userEmail ? String(userEmail).trim().toLowerCase() : '';
+
+      const urlsFotos = [];
+      for (let i = 0; i < imagens.length; i++) {
+        const file = imagens[i];
+        const nomeArquivo = `orcamentos/${Date.now()}_${i}_${file.name}`;
+        const arquivoRef = storageRef(storage, nomeArquivo);
+        
+        await uploadBytes(arquivoRef, file);
+        const downloadUrl = await getDownloadURL(arquivoRef);
+        urlsFotos.push(downloadUrl);
+      }
 
       const budgetData = {
         tipo: 'Solicitação de Orçamento',
@@ -66,6 +91,7 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
         urgencia,
         bairro,
         descricao,
+        fotos: urlsFotos,
         status: 'Pendente',
         criadoEm: new Date().toISOString()
       };
@@ -77,14 +103,14 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
       alert(`Solicitação enviada com sucesso! Código do Orçamento: ${novoOrcamentoRef.key}`);
       if (onSubmitSuccess) onSubmitSuccess({ id: novoOrcamentoRef.key, ...budgetData });
       
-      // Limpeza de campos e fechamento
       setServicosSelecionados([]);
       setBairro('');
       setDescricao('');
-      setPreviewUrl('');
+      setImagens([]);
+      setPreviews([]);
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar orçamento no Realtime Database:', error);
+      console.error('Erro ao salvar orçamento e fotos:', error);
       alert('Ocorreu um erro ao enviar a solicitação. Tente novamente.');
     } finally {
       setLoading(false);
@@ -136,7 +162,6 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
                   );
                 })}
 
-                {/* BOTÃO PARA ABRIR O MODAL DE OUTROS SERVIÇOS ESPECIALIZADOS */}
                 <div
                   className={`service-card-option ${servicosSelecionados.some(s => s.startsWith('Especializado:')) ? 'selected' : ''}`}
                   onClick={() => setShowOtherModal(true)}
@@ -146,7 +171,6 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
                 </div>
               </div>
 
-              {/* Exibe os itens especializados adicionados */}
               {servicosSelecionados.filter(s => s.startsWith('Especializado:')).length > 0 && (
                 <div style={{ marginTop: '10px', fontSize: '13px', color: '#f2c94c' }}>
                   <strong>Itens especializados selecionados:</strong>
@@ -190,11 +214,35 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
             </div>
 
             <div className="form-group">
-              <label className="section-label">6. Foto do Local/Quadro (Opcional)</label>
-              <input type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
-              {previewUrl && (
-                <div className="image-preview">
-                  <img src={previewUrl} alt="Preview do local" />
+              <label className="section-label">6. Fotos do Local/Problema (Máximo 3 fotos)</label>
+              {imagens.length < 3 && (
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  onChange={handleImagesChange} 
+                  className="file-input" 
+                />
+              )}
+              
+              {previews.length > 0 && (
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                  {previews.map((src, index) => (
+                    <div key={index} style={{ position: 'relative', width: '70px', height: '70px' }}>
+                      <img 
+                        src={src} 
+                        alt={`Preview ${index}`} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid #f2c94c' }} 
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveImage(index)}
+                        style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -204,13 +252,12 @@ export default function RequestBudgetModal({ isOpen, onClose, onSubmitSuccess, u
               className="btn-submit-service"
               disabled={servicosSelecionados.length === 0 || !bairro.trim() || loading}
             >
-              {loading ? 'Enviando...' : 'Enviar Pedido de Orçamento 🚀'}
+              {loading ? 'Enviando Fotos e Orçamento...' : 'Enviar Pedido de Orçamento 🚀'}
             </button>
           </form>
         </div>
       </div>
 
-      {/* Modal de Outros Serviços Especializados Reutilizável */}
       <OtherServicesModal
         isOpen={showOtherModal}
         onClose={() => setShowOtherModal(false)}
