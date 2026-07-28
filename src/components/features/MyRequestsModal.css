@@ -131,6 +131,27 @@
   border: 1px solid #f2c94c;
 }
 
+/* ESTILOS DAS BOLINHAS DE STATUS NO CANTO SUPERIOR DIREITO */
+.status-dot.status-cancelado {
+  background-color: #ef4444; /* Vermelho */
+}
+
+.status-dot.status-negociacao {
+  background-color: #f59e0b; /* Amarelo */
+}
+
+.status-dot.status-execucao {
+  background-color: #f97316; /* Laranja */
+}
+
+.status-dot.status-finalizado {
+  background-color: #10b981; /* Verde */
+}
+
+.status-dot.status-pendente {
+  background-color: #ffffff; /* Branco */
+}
+
 .card-body-summary {
   text-align: left;
   margin-bottom: 12px;
