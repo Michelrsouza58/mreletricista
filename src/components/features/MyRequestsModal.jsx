@@ -4,7 +4,7 @@ import './MyRequestsModal.css';
 import { db } from '../../services/firebase';
 import { ref, get } from 'firebase/database';
 
-export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
+export default function MyRequestsModal({ isOpen, onClose, userEmail, onOpenLogin }) {
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -17,14 +17,12 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
     try {
       const emailUsuario = userEmail ? userEmail.toLowerCase().trim() : null;
 
-      // SE NÃO ESTIVER LOGADO, NÃO MOSTRA NADA
       if (!emailUsuario) {
         setSolicitacoes([]);
         setLoading(false);
         return;
       }
 
-      // 1. Busca na subpasta de orçamentos
       const orcamentosRef = ref(db, 'orcamentos');
       const snapOrcamentos = await get(orcamentosRef);
       
@@ -38,7 +36,6 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
         });
       }
 
-      // 2. Busca na subpasta de Serviços Agendados
       const servicosRef = ref(db, 'servicos_agendados');
       const snapServicos = await get(servicosRef);
       
@@ -96,9 +93,30 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
         </p>
 
         {!userEmail ? (
-          <div className="requests-empty">
-            <span className="empty-icon">🔒</span>
-            <p>Você precisa estar logado para consultar seus pedidos.</p>
+          <div className="requests-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '30px 0' }}>
+            <span className="empty-icon" style={{ fontSize: '2.5rem' }}>🔒</span>
+            <p style={{ textAlign: 'center', color: '#d1d5db' }}>Você precisa estar logado para consultar seus pedidos.</p>
+            <button 
+              type="button"
+              className="dropdown-item highlight"
+              style={{
+                background: '#f2c94c',
+                color: '#0c2340',
+                fontWeight: 'bold',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)'
+              }}
+              onClick={() => {
+                onClose(); // Fecha o modal de pedidos
+                if (onOpenLogin) onOpenLogin(); // Abre o modal de login da Home
+              }}
+            >
+              Entrar / Cadastrar ➔
+            </button>
           </div>
         ) : (
           <>
