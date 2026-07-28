@@ -3,7 +3,7 @@ import './Home.css';
 import banner from '../assets/cartao-mr-eletricista.jpg';
 
 // Imagens dos Patrocinadores
-import patrocinadorEsq from '../assets/cartao-mr-eletricista.jpg';
+import patrocinadorEsq from '../assets/multlar.png';
 import patrocinadorDir from '../assets/takau.png';
 
 // Modais
