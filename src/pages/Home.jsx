@@ -69,9 +69,8 @@ function Home() {
           <span className="brand-eletricista-large">ELETRICISTA</span>
         </div>
 
-        {/* Patrocinador Direita (Takau) + Avatar Perfil */}
+        {/* Patrocinador Direita (Takau) */}
         <div className="sponsor-box right">
-          {/* Link para o Instagram da Takau Solar */}
           <a 
             href="https://www.instagram.com/p/DJ2TRMzy1jI/" 
             target="_blank" 
@@ -80,46 +79,47 @@ function Home() {
           >
             <img src={patrocinadorDir} alt="Patrocinador Takau Solar" className="sponsor-img" />
           </a>
-
-          <div className="user-profile-wrapper">
-            <button 
-              className="user-avatar-btn" 
-              onClick={() => setMenuOpen(!menuOpen)}
-              title="Menu do Perfil"
-            >
-              👤
-            </button>
-
-            {menuOpen && (
-              <div className="profile-dropdown">
-                {isLogged ? (
-                  <>
-                    <p className="user-greeting">
-                      Olá, {user?.nome || user?.nomeCompleto || 'Cliente'}!
-                    </p>
-                    <button className="dropdown-item" onClick={handleOpenMyRequests}>
-                      Meus Pedidos
-                    </button>
-                    <button className="dropdown-item" onClick={handleLogout}>
-                      Sair
-                    </button>
-                  </>
-                ) : (
-                  <button 
-                    className="dropdown-item highlight"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setShowLoginModal(true);
-                    }}
-                  >
-                    Entrar / Cadastrar
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </header>
+
+      {/* BOTÃO DO PERFIL FLUTUANTE (FIXO NO TOPO DIREITO DA TELA) */}
+      <div className="user-profile-wrapper">
+        <button 
+          className="user-avatar-btn" 
+          onClick={() => setMenuOpen(!menuOpen)}
+          title="Menu do Perfil"
+        >
+          👤
+        </button>
+
+        {menuOpen && (
+          <div className="profile-dropdown">
+            {isLogged ? (
+              <>
+                <p className="user-greeting">
+                  Olá, {user?.nome || user?.nomeCompleto || 'Cliente'}!
+                </p>
+                <button className="dropdown-item" onClick={handleOpenMyRequests}>
+                  Meus Pedidos
+                </button>
+                <button className="dropdown-item" onClick={handleLogout}>
+                  Sair
+                </button>
+              </>
+            ) : (
+              <button 
+                className="dropdown-item highlight"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setShowLoginModal(true);
+                }}
+              >
+                Entrar / Cadastrar
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* CONTEÚDO HERO CENTRAL */}
       <main className="hero-content-container">
@@ -208,6 +208,7 @@ function Home() {
         isOpen={showRequestsModal}
         onClose={() => setShowRequestsModal(false)}
         userEmail={user?.email}
+        onOpenLogin={() => setShowLoginModal(true)}
       />
 
       {/* RODAPÉ */}
