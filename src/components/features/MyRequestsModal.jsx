@@ -1,5 +1,5 @@
 // src/components/features/MyRequestsModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './MyRequestsModal.css';
 import { db } from '../../services/firebase';
 import { ref, get } from 'firebase/database';
@@ -10,13 +10,7 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [filter, setFilter] = useState('todos'); // 'todos', 'orcamentos', 'servicos'
 
-  useEffect(() => {
-    if (isOpen) {
-      carregarSolicitacoes();
-    }
-  }, [isOpen, userEmail]);
-
-  const carregarSolicitacoes = async () => {
+  const carregarSolicitacoes = useCallback(async () => {
     setLoading(true);
     const lista = [];
 
@@ -59,7 +53,13 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (isOpen) {
+      carregarSolicitacoes();
+    }
+  }, [isOpen, carregarSolicitacoes]);
 
   // Função auxiliar para definir a cor da bolinha baseada no status
   const getStatusColorClass = (status) => {
@@ -131,7 +131,7 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
                   key={item.id}
                   className="request-summary-card"
                   onClick={() => setSelectedRequest(item)}
-                  style={{ position: 'relative' }} // Garante o posicionamento absoluto da bolinha
+                  style={{ position: 'relative' }}
                 >
                   {/* BOLINHA DE STATUS NO CANTO SUPERIOR DIREITO */}
                   <div 
