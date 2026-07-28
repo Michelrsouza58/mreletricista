@@ -1,3 +1,4 @@
+// src/components/Home.jsx
 import React, { useState } from 'react';
 import './Home.css';
 import banner from '../assets/cartao-mr-eletricista.jpg';
@@ -50,9 +51,16 @@ function Home() {
 
       {/* HEADER ÚNICO COM PATROCINADORES E LOGO CENTRAL */}
       <header className="navbar-scroll-sponsor">
-        {/* Patrocinador Esquerda */}
+        {/* Patrocinador Esquerda (Multlar) - Link para o Instagram */}
         <div className="sponsor-box left">
-          <img src={patrocinadorEsq} alt="Patrocinador Esquerda" className="sponsor-img" />
+          <a 
+            href="https://www.instagram.com/multlarjbonifacio/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="Instagram Multlar"
+          >
+            <img src={patrocinadorEsq} alt="Patrocinador Multlar" className="sponsor-img" />
+          </a>
         </div>
 
         {/* Logo Único MR Eletricista no Centro */}
@@ -61,9 +69,17 @@ function Home() {
           <span className="brand-eletricista-large">ELETRICISTA</span>
         </div>
 
-        {/* Patrocinador Direita + Avatar Perfil */}
+        {/* Patrocinador Direita (Takau) + Avatar Perfil */}
         <div className="sponsor-box right">
-          <img src={patrocinadorDir} alt="Patrocinador Takau" className="sponsor-img" />
+          {/* Link para o Instagram da Takau Solar */}
+          <a 
+            href="https://www.instagram.com/p/DJ2TRMzy1jI/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="Instagram Takau Solar"
+          >
+            <img src={patrocinadorDir} alt="Patrocinador Takau Solar" className="sponsor-img" />
+          </a>
 
           <div className="user-profile-wrapper">
             <button 
