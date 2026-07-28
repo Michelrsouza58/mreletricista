@@ -6,17 +6,21 @@ import { ref, push, set } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import OtherServicesModal from './OtherServicesModal';
 
-export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, userEmail }) {
+export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, userEmail, onOpenLogin }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showOtherModal, setShowOtherModal] = useState(false);
- 
+
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setServicosSelecionados([]);
       setImagens([]);
       setPreviews([]);
+      setBairro('');
+      setDescricao('');
+      setDataSelecionada('');
+      setPeriodoSelecionado('');
     }
   }, [isOpen]);
 
@@ -98,6 +102,11 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!userEmail) {
+      alert('Você precisa estar logado para agendar um serviço.');
+      return;
+    }
+
     if (!dataSelecionada || !periodoSelecionado) {
       alert('Por favor, selecione o dia e o período da visita.');
       return;
@@ -105,7 +114,7 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
 
     try {
       setLoading(true);
-      const emailTratado = userEmail ? String(userEmail).trim().toLowerCase() : '';
+      const emailTratado = String(userEmail).trim().toLowerCase();
 
       // 1. Upload das fotos para o Firebase Storage
       const urlsFotos = [];
@@ -128,7 +137,7 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
         bairro,
         urgencia,
         descricao,
-        fotos: urlsFotos, // Array de URLs das fotos salvas no Storage
+        fotos: urlsFotos,
         dataAgendamento: dataSelecionada,
         periodo: periodoSelecionado,
         status: 'Pendente',
@@ -168,197 +177,228 @@ export default function RequestServiceModal({ isOpen, onClose, onSubmitSuccess, 
           <button className="modal-close-btn" onClick={onClose}>✕</button>
 
           <h3 className="modal-title-service">Solicitar Serviço Agendado</h3>
-          <p className="modal-subtitle-service">
-            Passo {step} de 2 &bull; {step === 1 ? 'Preencha os dados do serviço' : 'Escolha a Data e Horário'}
-          </p>
+          
+          {!userEmail ? (
+            <div className="requests-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '30px 0' }}>
+              <span className="empty-icon" style={{ fontSize: '2.5rem' }}>🔒</span>
+              <p style={{ textAlign: 'center', color: '#d1d5db' }}>Você precisa estar logado para agendar um serviço.</p>
+              <button 
+                type="button"
+                className="dropdown-item highlight"
+                style={{
+                  background: '#f2c94c',
+                  color: '#0c2340',
+                  fontWeight: 'bold',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)'
+                }}
+                onClick={() => {
+                  onClose();
+                  if (onOpenLogin) onOpenLogin();
+                }}
+              >
+                Entrar / Cadastrar ➔
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="modal-subtitle-service">
+                Passo {step} de 2 &bull; {step === 1 ? 'Preencha os dados do serviço' : 'Escolha a Data e Horário'}
+              </p>
 
-          <form onSubmit={handleSubmit} className="service-form">
-            {step === 1 && (
-              <div className="step-container">
-                <div className="form-group">
-                  <label className="section-label">1. Tipo de Imóvel</label>
-                  <div className="radio-group-imovel">
-                    {['Residencial', 'Comercial', 'Chácara / Rural'].map((tipo) => (
-                      <button
-                        key={tipo}
-                        type="button"
-                        className={`btn-option ${imovel === tipo ? 'selected' : ''}`}
-                        onClick={() => setImovel(tipo)}
-                      >
-                        {tipo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="section-label">2. Qual serviço você precisa?</label>
-                  <div className="services-grid-select">
-                    {listaServicos.map((serv) => {
-                      const isSelected = servicosSelecionados.includes(serv.label);
-                      return (
-                        <div
-                          key={serv.id}
-                          className={`service-card-option ${isSelected ? 'selected' : ''}`}
-                          onClick={() => handleToggleServico(serv.label)}
-                        >
-                          <span className="card-icon">{serv.icon}</span>
-                          <span className="card-label">{serv.label}</span>
-                        </div>
-                      );
-                    })}
-
-                    <div
-                      className={`service-card-option ${servicosSelecionados.some(s => s.startsWith('Especializado:')) ? 'selected' : ''}`}
-                      onClick={() => setShowOtherModal(true)}
-                    >
-                      <span className="card-icon">🔧</span>
-                      <span className="card-label">Outros (Encanamento, Segurança, Automação...)</span>
-                    </div>
-                  </div>
-
-                  {servicosSelecionados.filter(s => s.startsWith('Especializado:')).length > 0 && (
-                    <div style={{ marginTop: '10px', fontSize: '13px', color: '#f2c94c' }}>
-                      <strong>Itens especializados selecionados:</strong>
-                      <ul>
-                        {servicosSelecionados.filter(s => s.startsWith('Especializado:')).map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label className="section-label">3. Bairro / Localidade *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Centro, Bairro São José..."
-                    value={bairro}
-                    onChange={(e) => setBairro(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="section-label">4. Urgência do Atendimento</label>
-                  <select value={urgencia} onChange={(e) => setUrgencia(e.target.value)}>
-                    <option value="Normal">🟢 Normal - Agendamento Padrão</option>
-                    <option value="Pouca Urgência">🟡 Próximos dias</option>
-                    <option value="Urgente">🔴 Urgente - Sem energia / Risco elétrico</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="section-label">5. Descrição / Observações</label>
-                  <textarea
-                    rows="2"
-                    placeholder="Ex: Trazer escada alta, disjuntor de 50A..."
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="section-label">6. Fotos do Local/Quadro (Máximo 3 fotos)</label>
-                  {imagens.length < 3 && (
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      multiple 
-                      onChange={handleImagesChange} 
-                      className="file-input" 
-                    />
-                  )}
-                  
-                  {previews.length > 0 && (
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-                      {previews.map((src, index) => (
-                        <div key={index} style={{ position: 'relative', width: '70px', height: '70px' }}>
-                          <img 
-                            src={src} 
-                            alt={`Preview ${index}`} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid #f2c94c' }} 
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => handleRemoveImage(index)}
-                            style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+              <form onSubmit={handleSubmit} className="service-form">
+                {step === 1 && (
+                  <div className="step-container">
+                    <div className="form-group">
+                      <label className="section-label">1. Tipo de Imóvel</label>
+                      <div className="radio-group-imovel">
+                        {['Residencial', 'Comercial', 'Chácara / Rural'].map((tipo) => (
+                          <button
+                            key={tipo}
+                            type="button"
+                            className={`btn-option ${imovel === tipo ? 'selected' : ''}`}
+                            onClick={() => setImovel(tipo)}
                           >
-                            ✕
+                            {tipo}
                           </button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                <button
-                  type="button"
-                  className="btn-submit-service"
-                  onClick={() => setStep(2)}
-                  disabled={servicosSelecionados.length === 0 || !bairro.trim()}
-                >
-                  Avançar para Escolher Data e Hora ➔
-                </button>
-              </div>
-            )}
+                    <div className="form-group">
+                      <label className="section-label">2. Qual serviço você precisa?</label>
+                      <div className="services-grid-select">
+                        {listaServicos.map((serv) => {
+                          const isSelected = servicosSelecionados.includes(serv.label);
+                          return (
+                            <div
+                              key={serv.id}
+                              className={`service-card-option ${isSelected ? 'selected' : ''}`}
+                              onClick={() => handleToggleServico(serv.label)}
+                            >
+                              <span className="card-icon">{serv.icon}</span>
+                              <span className="card-label">{serv.label}</span>
+                            </div>
+                          );
+                        })}
 
-            {step === 2 && (
-              <div className="step-container">
-                <div className="form-group">
-                  <label className="section-label">📅 Selecione o Dia do Atendimento</label>
-                  <div className="date-chips-grid">
-                    {diasDisponiveis.map((dia) => (
-                      <div
-                        key={dia.value}
-                        className={`date-chip ${dataSelecionada === dia.value ? 'selected' : ''}`}
-                        onClick={() => setDataSelecionada(dia.value)}
-                      >
-                        <span className="chip-text">{dia.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="section-label">⏰ Período Preferencial</label>
-                  <div className="time-slots-grid">
-                    {[
-                      { id: 'manha', title: 'Manhã', hora: '08:00 às 12:00', icon: '🌅' },
-                      { id: 'tarde', title: 'Tarde', hora: '13:00 às 18:00', icon: '☀️' },
-                      { id: 'noite', title: 'Noite / Emergência', hora: '18:30 às 21:00', icon: '🌙' },
-                    ].map((slot) => (
-                      <div
-                        key={slot.id}
-                        className={`time-slot-card ${periodoSelecionado === slot.title ? 'selected' : ''}`}
-                        onClick={() => setPeriodoSelecionado(slot.title)}
-                      >
-                        <span className="slot-icon">{slot.icon}</span>
-                        <div className="slot-info">
-                          <strong>{slot.title}</strong>
-                          <span>{slot.hora}</span>
+                        <div
+                          className={`service-card-option ${servicosSelecionados.some(s => s.startsWith('Especializado:')) ? 'selected' : ''}`}
+                          onClick={() => setShowOtherModal(true)}
+                        >
+                          <span className="card-icon">🔧</span>
+                          <span className="card-label">Outros (Encanamento, Segurança, Automação...)</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="modal-actions-service">
-                  <button type="button" className="btn-back" onClick={() => setStep(1)} disabled={loading}>
-                    ⬅ Voltar
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="btn-submit-service"
-                    disabled={!dataSelecionada || !periodoSelecionado || loading}
-                  >
-                    {loading ? 'Enviando Fotos e Agendando...' : 'Finalizar Agendamento 🚀'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </form>
+                      {servicosSelecionados.filter(s => s.startsWith('Especializado:')).length > 0 && (
+                        <div style={{ marginTop: '10px', fontSize: '13px', color: '#f2c94c' }}>
+                          <strong>Itens especializados selecionados:</strong>
+                          <ul>
+                            {servicosSelecionados.filter(s => s.startsWith('Especializado:')).map((item, idx) => (
+                              <li key={idx}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="section-label">3. Bairro / Localidade *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Centro, Bairro São José..."
+                        value={bairro}
+                        onChange={(e) => setBairro(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="section-label">4. Urgência do Atendimento</label>
+                      <select value={urgencia} onChange={(e) => setUrgencia(e.target.value)}>
+                        <option value="Normal">🟢 Normal - Agendamento Padrão</option>
+                        <option value="Pouca Urgência">🟡 Próximos dias</option>
+                        <option value="Urgente">🔴 Urgente - Sem energia / Risco elétrico</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="section-label">5. Descrição / Observações</label>
+                      <textarea
+                        rows="2"
+                        placeholder="Ex: Trazer escada alta, disjuntor de 50A..."
+                        value={descricao}
+                        onChange={(e) => setDescricao(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="section-label">6. Fotos do Local/Quadro (Máximo 3 fotos)</label>
+                      {imagens.length < 3 && (
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          multiple 
+                          onChange={handleImagesChange} 
+                          className="file-input" 
+                        />
+                      )}
+                      
+                      {previews.length > 0 && (
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                          {previews.map((src, index) => (
+                            <div key={index} style={{ position: 'relative', width: '70px', height: '70px' }}>
+                              <img 
+                                src={src} 
+                                alt={`Preview ${index}`} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid #f2c94c' }} 
+                              />
+                              <button 
+                                type="button" 
+                                onClick={() => handleRemoveImage(index)}
+                                style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px', cursor: 'pointer' }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-submit-service"
+                      onClick={() => setStep(2)}
+                      disabled={servicosSelecionados.length === 0 || !bairro.trim()}
+                    >
+                      Avançar para Escolher Data e Hora ➔
+                    </button>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div className="step-container">
+                    <div className="form-group">
+                      <label className="section-label">📅 Selecione o Dia do Atendimento</label>
+                      <div className="date-chips-grid">
+                        {diasDisponiveis.map((dia) => (
+                          <div
+                            key={dia.value}
+                            className={`date-chip ${dataSelecionada === dia.value ? 'selected' : ''}`}
+                            onClick={() => setDataSelecionada(dia.value)}
+                          >
+                            <span className="chip-text">{dia.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="section-label">⏰ Período Preferencial</label>
+                      <div className="time-slots-grid">
+                        {[
+                          { id: 'manha', title: 'Manhã', hora: '08:00 às 12:00', icon: '🌅' },
+                          { id: 'tarde', title: 'Tarde', hora: '13:00 às 18:00', icon: '☀️' },
+                          { id: 'noite', title: 'Noite / Emergência', hora: '18:30 às 21:00', icon: '🌙' },
+                        ].map((slot) => (
+                          <div
+                            key={slot.id}
+                            className={`time-slot-card ${periodoSelecionado === slot.title ? 'selected' : ''}`}
+                            onClick={() => setPeriodoSelecionado(slot.title)}
+                          >
+                            <span className="slot-icon">{slot.icon}</span>
+                            <div className="slot-info">
+                              <strong>{slot.title}</strong>
+                              <span>{slot.hora}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="modal-actions-service">
+                      <button type="button" className="btn-back" onClick={() => setStep(1)} disabled={loading}>
+                        ⬅ Voltar
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="btn-submit-service"
+                        disabled={!dataSelecionada || !periodoSelecionado || loading}
+                      >
+                        {loading ? 'Enviando Fotos e Agendando...' : 'Finalizar Agendamento 🚀'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </form>
+            </>
+          )}
         </div>
       </div>
 

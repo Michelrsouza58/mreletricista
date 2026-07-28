@@ -6,8 +6,8 @@ import banner from '../assets/cartao-mr-eletricista.jpg';
 // Imagens dos Patrocinadores e Ícones
 import patrocinadorEsq from '../assets/multlar.png';
 import patrocinadorDir from '../assets/takau.png';
-import whatsappIcon from '../assets/whatsapp-icon.png';   // <-- Adicione aqui
-import instagramIcon from '../assets/instagram-icon.png'; // <-- Adicione aqui
+import whatsappIcon from '../assets/whatsapp-icon.png'; 
+import instagramIcon from '../assets/instagram-icon.png';
 
 // Modais
 import AuthModals from '../components/auth/AuthModals';
@@ -201,6 +201,7 @@ function Home() {
         isOpen={showBudgetModal}
         onClose={() => setShowBudgetModal(false)}
         userEmail={user?.email}
+        onOpenLogin={() => setShowLoginModal(true)}
         onSubmitSuccess={(dados) => console.log('Orçamento salvo:', dados)}
       />
 
@@ -208,6 +209,7 @@ function Home() {
         isOpen={showServiceModal}
         onClose={() => setShowServiceModal(false)}
         userEmail={user?.email}
+        onOpenLogin={() => setShowLoginModal(true)}
         onSubmitSuccess={(dados) => console.log('Serviço Agendado salvo:', dados)}
       />
 
