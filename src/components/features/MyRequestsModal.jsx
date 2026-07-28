@@ -31,7 +31,6 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
         const data = snapOrcamentos.val();
         Object.keys(data).forEach((key) => {
           const item = data[key];
-          // Se o usuário estiver logado, traz os dele; se não, exibe a lista geral de orçamentos
           if (!emailUsuario || (item.email && item.email.toLowerCase().trim() === emailUsuario)) {
             lista.push({ id: key, categoria: 'Orcamento', ...item });
           }
@@ -62,9 +61,19 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
     }
   };
 
+  // Função auxiliar para definir a cor da bolinha baseada no status
+  const getStatusColorClass = (status) => {
+    if (!status) return 'status-pendente'; // padrão amarelo/cinza se vazio
+    const s = status.toLowerCase();
+    if (s.includes('cancelado')) return 'status-cancelado'; // Vermelho
+    if (s.includes('negociação') || s.includes('negociacao')) return 'status-negociacao'; // Amarelo
+    if (s.includes('execução') || s.includes('execucao') || s.includes('andamento')) return 'status-execucao'; // Laranja
+    if (s.includes('finalizado') || s.includes('concluído') || s.includes('concluido')) return 'status-finalizado'; // Verde
+    return 'status-pendente';
+  };
+
   if (!isOpen) return null;
 
-  // CORREÇÃO AQUI: 'Orcamento' com O maiúsculo
   const solicitacoesFiltradas = solicitacoes.filter((item) => {
     if (filter === 'orcamentos') return item.categoria === 'Orcamento';
     if (filter === 'servicos') return item.categoria === 'ServicoAgendado';
@@ -113,36 +122,66 @@ export default function MyRequestsModal({ isOpen, onClose, userEmail }) {
           </div>
         ) : (
           <div className="requests-grid">
-            {solicitacoesFiltradas.map((item) => (
-              <div
-                key={item.id}
-                className="request-summary-card"
-                onClick={() => setSelectedRequest(item)}
-              >
-                <div className="card-header-type">
-                  <span className={`badge-type ${item.categoria}`}>
-                    {item.categoria === 'Orcamento' ? '📋 Orçamento' : '⚡ Agendamento'}
-                  </span>
-                  <span className={`badge-status ${item.status?.toLowerCase() || 'pendente'}`}>
-                    {item.status || 'Pendente'}
-                  </span>
-                </div>
+            {solicitacoesFiltradas.map((item) => {
+              const statusAtual = item.status || 'Pendente';
+              const statusColorClass = getStatusColorClass(statusAtual);
 
-                <div className="card-body-summary">
-                  <strong className="summary-title">
-                    {item.servicos ? item.servicos.join(', ') : 'Serviço Elétrico'}
-                  </strong>
-                  <p className="summary-info">📍 {item.bairro || 'José Bonifácio'}</p>
-                  {item.dataAgendamento && (
-                    <p className="summary-info">📅 Visita: {item.dataAgendamento} ({item.periodo})</p>
-                  )}
-                </div>
+              return (
+                <div
+                  key={item.id}
+                  className="request-summary-card"
+                  onClick={() => setSelectedRequest(item)}
+                  style={{ position: 'relative' }} // Garante o posicionamento absoluto da bolinha
+                >
+                  {/* BOLINHA DE STATUS NO CANTO SUPERIOR DIREITO */}
+                  <div 
+                    title={`Status: ${statusAtual}`}
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span style={{ fontSize: '11px', color: '#a0aec0', fontWeight: '500' }}>
+                      {statusAtual}
+                    </span>
+                    <span 
+                      className={`status-dot ${statusColorClass}`}
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        display: 'inline-block',
+                        boxShadow: '0 0 4px rgba(0,0,0,0.3)'
+                      }}
+                    />
+                  </div>
 
-                <div className="card-footer-action">
-                  <span>Ver detalhes completos ➔</span>
+                  <div className="card-header-type" style={{ paddingRight: '80px' }}>
+                    <span className={`badge-type ${item.categoria}`}>
+                      {item.categoria === 'Orcamento' ? '📋 Orçamento' : '⚡ Agendamento'}
+                    </span>
+                  </div>
+
+                  <div className="card-body-summary" style={{ marginTop: '8px' }}>
+                    <strong className="summary-title">
+                      {item.servicos ? item.servicos.join(', ') : 'Serviço Elétrico'}
+                    </strong>
+                    <p className="summary-info">📍 {item.bairro || 'José Bonifácio'}</p>
+                    {item.dataAgendamento && (
+                      <p className="summary-info">📅 Visita: {item.dataAgendamento} ({item.periodo})</p>
+                    )}
+                  </div>
+
+                  <div className="card-footer-action">
+                    <span>Ver detalhes completos ➔</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
