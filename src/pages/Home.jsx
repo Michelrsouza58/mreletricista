@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import './Home.css';
 import banner from '../assets/cartao-mr-eletricista.jpg';
 
-// Imagens dos Patrocinadores
+// Imagens dos Patrocinadores e Ícones
 import patrocinadorEsq from '../assets/multlar.png';
 import patrocinadorDir from '../assets/takau.png';
+import whatsappIcon from '../assets/whatsapp-icon.png';   // <-- Adicione aqui
+import instagramIcon from '../assets/instagram-icon.png'; // <-- Adicione aqui
 
 // Modais
 import AuthModals from '../components/auth/AuthModals';
@@ -51,7 +53,7 @@ function Home() {
 
       {/* HEADER ÚNICO COM PATROCINADORES E LOGO CENTRAL */}
       <header className="navbar-scroll-sponsor">
-        {/* Patrocinador Esquerda (Multlar) - Link para o Instagram */}
+        {/* Patrocinador Esquerda (Multlar) */}
         <div className="sponsor-box left">
           <a 
             href="https://www.instagram.com/multlarjbonifacio/" 
@@ -159,14 +161,17 @@ function Home() {
             </button>
           </div>
 
+          {/* BARRA DE CONTATOS COM ÍCONES REAIS */}
           <div className="quick-contacts-bar">
             <a 
               href="https://wa.me/5517991640310" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="contact-link"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              📱 (17) 99164-0310
+              <img src={whatsappIcon} alt="WhatsApp" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+              (17) 99164-0310
             </a>
             <span className="divider">•</span>
             <a 
@@ -174,8 +179,10 @@ function Home() {
               target="_blank" 
               rel="noopener noreferrer" 
               className="contact-link"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              📷 @michelrobertoeletricista
+              <img src={instagramIcon} alt="Instagram" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+              @michelrobertoeletricista
             </a>
           </div>
         </div>
